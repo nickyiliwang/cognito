@@ -1,7 +1,7 @@
 # Serverless Cognito
 
-<!-- TODO: -->
-<!-- https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpool.html -->
+TODO:
+https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpool.html
 
 1. Front-end portal for Customer and Provider
 2. 2 user pools with IDF for bot the customer and provider
@@ -9,14 +9,14 @@
 4. Create IAM Roles in template and assign it to different Lambda Functions, (this is for private buckets)
 5. IAM Role with Policies to different user pools to get private bucket access (sjh private bucket)
 
-<!-- DEMO -->
+DEMO
 
 1. user sign-up and sign-in confirmation
 2.
 
 ## Auth Flow
 
-<!-- https://drive.google.com/file/d/11f6mdIRf3xaVJ31XHL_F1TMOe97axF_k/view?usp=sharing -->
+https://drive.google.com/file/d/11f6mdIRf3xaVJ31XHL_F1TMOe97axF_k/view?usp=sharing
 
 ## Setup
 
