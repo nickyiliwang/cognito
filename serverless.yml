@@ -2,11 +2,13 @@ service: cognito-user-pool
 
 provider:
   name: aws
-  runtime: nodejs8.10
-  region: eu-west-2
-  stage: ${self:custom.currentStage}
-  logRetentionInDays: 30
-  timeout: 30
+  runtime: nodejs12.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  profile: nickyiliwang
+  lambdaHashingVersion: 20201221
+  apiGateway:
+    shouldStartNameWithService: true
 
 custom:
   defaultStage: dev
@@ -25,22 +27,16 @@ functions:
             type: COGNITO_USER_POOLS
             authorizerId:
               Ref: ApiGatewayAuthorizer
-          cors:
-            origin: 'http://localhost:3000'
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-            allowCredentials: true
+          cors: true
+
   guests:
     handler: handler.hiGuests
     events:
       - http:
           path: /hiAll
           method: get
+          cors: true
+
 
 resources:
   Resources:
@@ -65,6 +61,8 @@ resources:
         GenerateSecret: False
         UserPoolId:
           Ref: CognitoUserPool
+          
+    # This authorizes the lambda functions
     ApiGatewayAuthorizer:
       DependsOn:
         - ApiGatewayRestApi

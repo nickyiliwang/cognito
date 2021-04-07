@@ -1,10 +1,10 @@
-'use strict';
+"use strict";
 
 module.exports.hiGuests = (event, context, callback) => {
   const response = {
     statusCode: 200,
     body: JSON.stringify({
-      message: 'Hi! You are a guest'
+      message: "Hi! You are a guest",
     }),
   };
 
@@ -15,11 +15,11 @@ module.exports.hiUsers = (event, context, callback) => {
   const response = {
     statusCode: 200,
     headers: {
-      "Access-Control-Allow-Origin" : "http://localhost:3000", // Required for CORS support to work
-      "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+      "Access-Control-Allow-Origin": "*", // Required for CORS support to work
+      "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
     },
     body: JSON.stringify({
-      message: 'You are a registered user!'
+      message: "You are a registered user!",
     }),
   };
 
