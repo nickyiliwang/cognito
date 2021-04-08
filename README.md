@@ -56,3 +56,19 @@ https://petobe-auth.auth.us-east-1.amazoncognito.com
 ## Sign in and sign out URLs
 
 Callback URL and sign-out URL
+
+## App client settings
+
+Allowed OAuth Flows  
+Implicit grant
+
+Allowed OAuth Scopes  
+phone email openid aws.cognito.signin.user.admin profile
+
+## Amazon Cognito domain
+
+https://petobe-auth-portal.auth.us-east-1.amazoncognito.com
+
+Click on Launch Hosted UI to get the URL:
+
+https://petobe-auth-portal.auth.us-east-1.amazoncognito.com/login?client_id=2fagm18aqrd219sjj8hnfe1f3j&response_type=token&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=http://localhost:5500

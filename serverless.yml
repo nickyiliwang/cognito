@@ -1,50 +1,81 @@
-service: cognito-user-pool
+service: cognito-user-pools
 
 provider:
   name: aws
   runtime: nodejs12.x
   region: us-east-1
   stage: ${opt:stage, 'dev'}
-  profile: nickyiliwang
+  profile: petobe
   lambdaHashingVersion: 20201221
   apiGateway:
     shouldStartNameWithService: true
 
-custom:
-  defaultStage: dev
-  currentStage: ${opt:stage, self:custom.defaultStage}
-  userPoolName: test-user-pool-${self:custom.currentStage}
-  userPoolClientName: test-user-pool-client-${self:custom.currentStage}
-
-functions:
-  registeredOnly:
-    handler: handler.hiUsers
+functions:          
+  guest:
+    handler: handler.hiGuest
     events:
       - http:
-          path: /hiUsers
+          path: /guest
           method: get
+          cors: true
+
+  registeredCustomer:
+    handler: handler.hiCustomer
+    events:
+      - http:
+          path: /customer
+          method: get
+          cors:
+            origin: 'http://localhost:3000'
+            # Needed for Authorization CORS
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
+          # authorizer 
           authorizer:
             type: COGNITO_USER_POOLS
             authorizerId:
-              Ref: ApiGatewayAuthorizer
-          cors: true
+              Ref: CustomerAuthorizer
 
-  guests:
-    handler: handler.hiGuests
+  registeredProvider:
+    handler: handler.hiProvider
     events:
       - http:
-          path: /hiAll
+          path: /provider
           method: get
-          cors: true
+          cors:
+            origin: 'http://localhost:3001'
+            # Needed for Authorization CORS
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
+          # authorizer 
+          authorizer:
+            type: COGNITO_USER_POOLS
+            authorizerId:
+              Ref: ProviderAuthorizer
+
+
 
 
 resources:
   Resources:
-    CognitoUserPool:
+    # CUSTOMER POOL
+    CustomerPool:
       Type: "AWS::Cognito::UserPool"
       Properties:
         MfaConfiguration: OFF
-        UserPoolName: ${self:custom.userPoolName}
+        UserPoolName: ${self:custom.customerPoolName}
         UsernameAttributes:
           - email
         Policies:
@@ -54,32 +85,127 @@ resources:
             RequireNumbers: True
             RequireSymbols: False
             RequireUppercase: True
-    CognitoUserPoolClient:
+    CustomerPoolClient:
       Type: "AWS::Cognito::UserPoolClient"
       Properties:
-        ClientName: ${self:custom.userPoolClientName}
+        ClientName: ${self:custom.customerUserPoolClientName}
         GenerateSecret: False
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthFlows:
+          - implicit 
+        AllowedOAuthScopes:
+          - phone
+          - email
+          - openid
+          - profile
+          - aws.cognito.signin.user.admin
+        # cannot have trailing "/"
+        CallbackURLs:
+          - http://localhost:3000
+        LogoutURLs:
+          - http://localhost:3000
+        SupportedIdentityProviders: 
+          - COGNITO
         UserPoolId:
-          Ref: CognitoUserPool
-          
+          Ref: CustomerPool
+
+    # PROVIDER POOL
+    ProviderPool:
+      Type: "AWS::Cognito::UserPool"
+      Properties:
+        MfaConfiguration: OFF
+        UserPoolName: ${self:custom.providerPoolName}
+        UsernameAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 6
+            RequireLowercase: False
+            RequireNumbers: True
+            RequireSymbols: False
+            RequireUppercase: True
+    ProviderPoolClient:
+      Type: "AWS::Cognito::UserPoolClient"
+      Properties:
+        ClientName: ${self:custom.providerUserPoolClientName}
+        GenerateSecret: False
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthFlows:
+          - implicit 
+        AllowedOAuthScopes:
+          - phone
+          - email
+          - openid
+          - profile
+          - aws.cognito.signin.user.admin
+        CallbackURLs: 
+          - http://localhost:3001
+        LogoutURLs:
+          - http://localhost:3001
+        SupportedIdentityProviders: 
+          - COGNITO
+        UserPoolId:
+          Ref: ProviderPool
+
     # This authorizes the lambda functions
-    ApiGatewayAuthorizer:
+    CustomerAuthorizer:
       DependsOn:
         - ApiGatewayRestApi
       Type: AWS::ApiGateway::Authorizer
       Properties:
-        Name: cognito-authorizer
+        Name: customer-authorizer
         IdentitySource: method.request.header.Authorization
         RestApiId:
           Ref: ApiGatewayRestApi
         Type: COGNITO_USER_POOLS
         ProviderARNs:
-          - Fn::GetAtt: [CognitoUserPool, Arn]
+          - Fn::GetAtt: [CustomerPool, Arn]
+
+    ProviderAuthorizer:
+      DependsOn:
+        - ApiGatewayRestApi
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: provider-authorizer
+        IdentitySource: method.request.header.Authorization
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        Type: COGNITO_USER_POOLS
+        ProviderARNs:
+          - Fn::GetAtt: [ProviderPool, Arn]
+
+    CustomerAuthDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: "petobe-customer-portal"
+        UserPoolId:
+          Ref: CustomerPool
+      
+    ProviderAuthDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: "petobe-provider-portal"
+        UserPoolId:
+          Ref: ProviderPool
+
   Outputs:
-    CognitoUserPoolArn:
+    CustomerPoolArn:
       Value:
         Fn::GetAtt:
-          - CognitoUserPool
+          - CustomerPool
           - Arn
       Export:
-        Name: CognitoUserPoolArn-${self:custom.currentStage}
+        Name: CustomerPoolArn-${self:provider.stage}
+    ProviderPoolArn:
+      Value:
+        Fn::GetAtt:
+          - ProviderPool
+          - Arn
+      Export:
+        Name: ProviderPoolArn-${self:provider.stage}
+        
+custom:
+  customerPoolName: customer-user-pool-${self:provider.stage}
+  customerUserPoolClientName: customer-user-pool-client-${self:provider.stage}
+  providerPoolName: provider-user-pool-${self:provider.stage}
+  providerUserPoolClientName: provider-user-pool-client-${self:provider.stage}
