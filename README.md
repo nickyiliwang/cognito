@@ -72,3 +72,26 @@ https://petobe-auth-portal.auth.us-east-1.amazoncognito.com
 Click on Launch Hosted UI to get the URL:
 
 https://petobe-auth-portal.auth.us-east-1.amazoncognito.com/login?client_id=2fagm18aqrd219sjj8hnfe1f3j&response_type=token&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=http://localhost:5500
+
+DEMO FLOW: 
+
+1. Overall flow from client login to authentication to interacting with our apis and database
+
+2. on user sign up call lambda and set dynamoDB record, this requires more setup with IAM, it's an TODO. 
+
+
+DEMO APPS: 
+
+4. Public API Endpoint works without user registeration
+
+5. Sign up with aws hosted UI, Abstracted and using Hosted UI because Taehoon have done most of the signup apis
+
+6. sign up with email, we can have more fields, we can also authenticate with google emails
+
+7. Verification with email, and verification code
+
+8. rediect and now the user can use either customer endpoint or provider end point depending on where they registered
+
+9. We are also showing you the token within the app to store and reuse in other apps.
+
+10. refreshing will retain your login status.
